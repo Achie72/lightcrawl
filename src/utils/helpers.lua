@@ -85,13 +85,13 @@ end
 ---@param y number: y position
 ---@param clr RGBColor | number: Color of the text
 function helpers.draw_icon_with_text(icon, icon_width, text, x, y, clr)
+    love.graphics.draw(icon, x, y)
 	color.set(clr)
-	love.graphics.draw(icon, x, y)
 	love.graphics.print(text, _G.font, x+icon_width, y+1)
 	color.reset()
 end
 
-function helpers.draw_outline(text, x, y, clr, thickness, border_color)
+function helpers.print_outline(text, x, y, clr, thickness, border_color)
     if thickness == nil then thickness = 1 end
     if border_color == nil then border_color = color.PICO_DARK_BLUE end
 
@@ -104,6 +104,20 @@ function helpers.draw_outline(text, x, y, clr, thickness, border_color)
     color.set(clr)
     love.graphics.print(text, _G.font, x, y)
     color.reset()
+end
+
+function helpers.remove_element_from_table(tbl, element)
+    for i=#tbl,1,-1 do
+        local elem = tbl[i]
+        if elem == element then
+            table.remove(tbl, i)
+            break
+        end
+    end
+end
+
+function helpers.text_lenght(text)
+	return _G.font:getWidth(text)
 end
 
 return helpers

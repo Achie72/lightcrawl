@@ -29,6 +29,10 @@ local skill_table = {
   UI_IMAGES.SKILL_RUSTING
 }
 
+function Enemy.fetch_image(id)
+
+end
+
 function Enemy.new(id, is_top_or_bottom)
     local self = {
       id = id,
@@ -36,7 +40,7 @@ function Enemy.new(id, is_top_or_bottom)
       y = is_top_or_bottom and const.TOP_LANE_Y_LEVEL or const.BOTTOM_LANE_Y_LEVEL,
       sprite = id == 1 and love.graphics.newImage("assets/sprites/enemies/skeleton_archer.png") or love.graphics.newImage("assets/sprites/enemies/cyclops.png"),
       is_top_lane = is_top_or_bottom,
-      health = enemy_data_table[1][id],
+      health = enemy_data_table[1][id] + _G.diff_val,
       weakness = enemy_data_table[2][id],
       skill = enemy_data_table[3][id],
       encounter_type = const.ENCOUNTER_ENEMY

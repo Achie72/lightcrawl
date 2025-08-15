@@ -3,6 +3,7 @@ local item_image_handler = require "src.utils.item_image_handler"
 local const = require "src.utils.const"
 local color = require "src.utils.color"
 local helpers = require "src.utils.helpers"
+local UI_IMAGES = require "src.utils.ui_image_handler"
 
 local item_image_table = {
     item_image_handler.WHETSTONE_IMAGE,
@@ -28,9 +29,13 @@ function Item.new(id, is_top_or_bottom)
             durability = 0,
             health = 0,
             shield = 0,
-        }
+        },
+        stat = nil,
+        cost = math.random(10)
     }
-    self.stats[stat_keys[id]] = math.random(4)
+    self.stats[stat_keys[id]] = math.random(4) + _G.item_diff_val
+    self.stat = stat_keys[id]
+
     
     function self:update(dt)
         self.x = self.x - 0.6
@@ -47,7 +52,7 @@ function Item.new(id, is_top_or_bottom)
     function self:draw()
         local x_pos, y_pos = math.floor(self.x), math.floor(self.y)
         love.graphics.draw(self.sprite, x_pos, y_pos)
-        color.set(color.PICO_LIGHT_GREY)
+        
         local stat_that_matters = 0
         --huh, don forget ipairs for numeric index, pairs for associative
 
@@ -58,9 +63,7 @@ function Item.new(id, is_top_or_bottom)
             end
         end
 
-
-        love.graphics.print(stat_that_matters, _G.font, x_pos, y_pos-6)
-        color.reset()
+        helpers.draw_icon_with_text(UI_IMAGES.COIN, 7, tostring(self.cost).."->"..tostring(stat_that_matters), x_pos-4, y_pos-6, color.PICO_ORANGE)
     end
 
     return self

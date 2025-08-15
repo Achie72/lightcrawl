@@ -17,7 +17,8 @@ ui_image_handler.MAX_HEALTH_UP = love.graphics.newImage("assets/sprites/ui/ui14.
 ui_image_handler.MENU_TEXT_LOGO = love.graphics.newImage("assets/sprites/ui/light_crawl_logeo.png")
 ui_image_handler.MENU_BACKGROUND = love.graphics.newImage("assets/sprites/ui/menu_bg2.png")
 ui_image_handler.MENU_PLAYER_SPRITE = love.graphics.newImage("assets/sprites/player/player.png")
-
+ui_image_handler.GAMEOVER_TEXT_LOGO = love.graphics.newImage("assets/sprites/ui/gameover.png")
+ui_image_handler.GAMEOVER_GRAVE = love.graphics.newImage("assets/sprites/ui/grave.png")
 
 
 return ui_image_handler

@@ -13,13 +13,17 @@ function Player.new(id, x, y)
       is_top_or_bottom = true,
       max_health = 10,
       health = 10,
-      shield = 0,
+      shield = 9990,
       weapon = const.SWORD_TYPE,
       damage = 2,
       durability = 3,
       secondary_weapon =  const.SPEAR_TYPE,
       secondary_damage = 5,
-      secondary_durability = 1
+      secondary_durability = 1,
+      distance = 0,
+      defeated = 123,
+      defeated_by = 1,
+      gold = 690
     }
 
     function self:keyreleased(key)

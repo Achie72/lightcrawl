@@ -19,7 +19,7 @@ function Weapon.new(id, is_top_or_bottom)
         x = 70,
         y = is_top_or_bottom and const.TOP_LANE_Y_LEVEL or const.BOTTOM_LANE_Y_LEVEL,
         sprite = weapon_image_table[id],
-        damage = helpers.random_element_from({1,2,3}),
+        damage = helpers.random_element_from({1,2,3}) + _G.item_diff_val,
         durability = helpers.random_element_from({1,2,3}),
         encounter_type = const.ENCOUNTER_WEAPON
     }

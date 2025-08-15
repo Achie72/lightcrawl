@@ -14,6 +14,14 @@ function menu_handler.new()
       print("pressed")
     end
 
+    function self:keypressed(key)
+      if key == "left" then
+        master_volume = master_volume - 0.1
+      elseif key == "right" then
+        master_volume = master_volume + 0.1
+      end
+    end
+
     return self
 end
 
