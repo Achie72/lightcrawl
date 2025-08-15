@@ -26,7 +26,7 @@ function love.load()
 	accumulator = 0.0
 	canvasWidth = 64
 	canvasHeight = 64
-
+	_G.diff_val = 0
 	gameCanvas = nil
 	love.window.setMode (640, 640, {resizable=true, borderless=false})
 	love.window.setTitle = "LOWREZJAM"
@@ -55,6 +55,13 @@ function love.load()
 	input_id = nil
 	table.insert(keypress_listener_collection, menu_input_handler_obj)
 	table.insert(keypress_listener_collection, gameover_input_handler)
+
+	music = love.audio.newSource("assets/sfx/lightcrawl_3.wav", "stream")
+	master_volume = 0
+	music:play()
+
+	dummy_image = love.graphics.newImage("assets/sprites/enemies/skeleton_archer.png")
+	game_spawn_count = 0
 end
 
 function update_entities()
@@ -73,27 +80,46 @@ function draw_enemies()
 	end
 end
 
-function spawn_enemy()
-	table.insert(entity_collection, enemy_handler.new(helpers.random_element_from({1,2}),math.random() > 0.49))
+
+function reset_game()
+	player.max_health = 10
+	player.health = 10
+	player.shield = 0
+	player.weapon = const.NONE_TYPE
+	player.secondary_weapon = const.NONE_TYPE
+	player.defeated = 0
+	player.distance = 0
+	player.gold = 0
+	game_spawn_count = 0
+	_G.diff_val = 0
+	_G.item_diff_val = 0
+end
+function spawn_enemy(pos)
+	table.insert(entity_collection, enemy_handler.new(helpers.random_element_from({1,2}),pos == const.TOP_LANE_Y_LEVEL))
 end
 
-function spawn_item()
-	table.insert(entity_collection, weapon_handler.new(helpers.random_element_from({1,2,3}),math.random() > 0.49))
+function spawn_weapon(pos)
+	table.insert(entity_collection, weapon_handler.new(helpers.random_element_from({1,2,3}),pos == const.TOP_LANE_Y_LEVEL))
 end
 
-function spawn_choice()
-	table.insert(entity_collection, buff_handler.new(math.random() > 0.49))
+function spawn_shopitem(pos)
+	table.insert(entity_collection, item_handler.new(helpers.random_element_from({1,2,3}),pos == const.TOP_LANE_Y_LEVEL))
+end
+
+function spawn_choice(pos)
+	table.insert(entity_collection, buff_handler.new(pos == const.TOP_LANE_Y_LEVEL))
 end
 
 function love.update(dt)
+	music:setVolume(master_volume)
 	accumulator = accumulator+dt
 	if accumulator >= tickPeriod then	
 		ticks = ticks+1
 		if ticks == 60 then
 			ticks = 0
+			player.distance =  player.distance + 1
 		end
 		STATE_MACHINE_FUNCTIONS[STATE].update()
-		print(button_hold_frames)
 		accumulator = accumulator - tickPeriod
 	end
 end
@@ -101,6 +127,7 @@ end
 function update_menu()
 	if love.keyboard.isDown('c') then
 		STATE = const.STATE_GAME
+		reset_game()
 	end
 
 	if #particle_collection < 5 then
@@ -133,6 +160,9 @@ end
 
 function update_game()
 -- chek button held frames
+
+	_G.diff_val = math.floor(player.distance/10)
+	_G.item_diff_val = math.floor(_G.diff_val * 0.6)
 	if love.keyboard.isDown() then
 		button_hold_frames = button_hold_frames + 1
 	end
@@ -141,10 +171,22 @@ function update_game()
 	update_entities()
 
 	-- handle collisions
+	local spawn_locations = {const.BOTTOM_LANE_Y_LEVEL, const.TOP_LANE_Y_LEVEL}
+	local first_spawn = helpers.random_element_from(spawn_locations)
+	helpers.remove_element_from_table(spawn_locations, first_spawn)
 	if ticks == 0 then
-		local spawn_function_table = {spawn_enemy, spawn_choice, spawn_item}
-		local spawn_function = helpers.random_weighted_element_from(spawn_function_table, {5,2,1})
-		spawn_function()
+		local spawn_function_table = {spawn_enemy, spawn_weapon, spawn_choice, spawn_shopitem}
+		if game_spawn_count % 10 == 0 then
+			spawn_function_table = {spawn_shopitem, spawn_shopitem}
+		end
+		local spawn_function = helpers.random_weighted_element_from(spawn_function_table, const.SPAWN_WEIGHT_TABLE)
+		spawn_function(first_spawn)
+		-- do second spawn
+		if math.random() < const.DOUBLE_SPAWN_CHANCE then
+			spawn_function = helpers.random_weighted_element_from(spawn_function_table, const.SPAWN_WEIGHT_TABLE)
+			spawn_function(spawn_locations[1])
+		end
+		game_spawn_count = game_spawn_count + 1
 	end
 	-- handle collision with stuff on the road
 	for i=#entity_collection,1,-1 do
@@ -195,13 +237,40 @@ function update_game()
 					if player.durability == 0 then
 						player.weapon = const.NONE_TYPE
 					end
-					table.remove(entity_collection, i)					
-				elseif entity.encounter_type == const.ENCOUNTER_WEAPON then
-					player.weapon = entity.id
-					player.damage = entity.damage
-					player.durability = entity.durability
 					table.remove(entity_collection, i)
+					player.defeated = player.defeated + 1
+					player.gold = player.gold + 1
+				elseif entity.encounter_type == const.ENCOUNTER_WEAPON then
+					if (player.weapon == const.NONE_TYPE or player.secondary_weapon ~= const.NONE_TYPE) then
+						player.weapon = entity.id
+						player.damage = entity.damage
+						player.durability = entity.durability
+						table.remove(entity_collection, i)
+					elseif player.secondary_weapon == const.NONE_TYPE then
+						player.secondary_weapon = entity.id
+						player.secondary_damage = entity.damage
+						player.secondary_durability = entity.durability
+						table.remove(entity_collection, i)
+					end
 				elseif entity.encounter_type == const.ENCOUNTER_ITEM then
+					-- we need to check to not spend money on items
+					-- that do nothing for us
+					if player.gold >= entity.cost then
+						if helpers.is_value_in_set(entity.stat, {"damage","durability"}) and player.weapon ~= const.NONE_TYPE then							
+							player.gold = player.gold - entity.cost
+							entity:apply(player)
+							table.remove(entity_collection, i)
+						elseif entity.stat == "health" then
+							if player.health == player.max_health then
+								player.max_health = player.max_health + math.floor(entity.stats.health/2)
+							else
+								player.gold = player.gold - entity.cost
+								entity:apply(player)
+							end
+							table.remove(entity_collection, i)
+						end
+					end
+				elseif entity.encounter_type == const.ENCOUNTER_CHOICE then
 					entity:apply(player)
 					table.remove(entity_collection, i)
 				end
@@ -220,6 +289,9 @@ function update_game()
 	player.health = math.min(player.health, player.max_health)
 	if player.durability <= 0 then
 		player.weapon = const.NONE_TYPE
+	end
+	if player.health <= 0 then
+		STATE = const.STATE_GAME_OVER
 	end
 end
 
@@ -329,13 +401,18 @@ function draw_menu()
 	love.graphics.draw(UI_IMAGES.MENU_BACKGROUND, 0, 24)
 	love.graphics.draw(UI_IMAGES.MENU_TEXT_LOGO, 10, math.floor(1 + math.sin(math.rad(ticks))*2))
 	love.graphics.draw(UI_IMAGES.MENU_PLAYER_SPRITE, menu_player_object.x, menu_player_object.y)
+	
 	local tip_text = "- press -"
-	--
-	if ticks % 60 > 30 then
-		helpers.draw_outline(tip_text, 32-17, 42, color.PICO_LIGHT_GREY, 1, 1)
-		helpers.draw_outline(tip_text, 32-17, 43, color.PICO_LAVENDER, 1, 1)
+	draw_press_promt(tip_text, 0, 42, true)
+end
+
+function draw_press_promt(text, x, y, is_center)
+	x = is_center and 32-helpers.text_lenght(text)/2 or x
+	if ticks then
+		helpers.print_outline(text, x, y, color.PICO_LIGHT_GREY, 1, 1)
+		helpers.print_outline(text, x, y+1, color.PICO_LAVENDER, 1, 1)
 		color.set(color.PICO_LIGHT_GREY)
-		love.graphics.print(tip_text, _G.font, 32-17, 42)
+		love.graphics.print(text, _G.font, x, y)
 		color.reset()
 	end
 end
@@ -376,8 +453,28 @@ function draw_game()
 		helpers.draw_icon_with_text(WEAPON_ICON_TABLE[player.secondary_weapon], 7, player.secondary_damage.."/"..player.secondary_durability, 0, UI_LINE_START + 10, color.PICO_LIGHT_GREY)
 	end
 
+	local goldt = tostring(player.gold)
+	local dist = tostring(player.distance).."m"
+	local gold_len = 62 - helpers.text_lenght(goldt) - 5
+	local dist_len = 62 - helpers.text_lenght(dist)
+	local start = (player.distance > 0 and dist_len-4 > gold_len) and dist_len or gold_len
+	helpers.draw_icon_with_text(UI_IMAGES.COIN, 7, goldt , start-1, 53, color.PICO_ORANGE)
+	if player.distance > 0 then	
+		color.set(color.PICO_LIGHT_GREY)
+    	love.graphics.print(dist, _G.font , start, 59)
+		color.reset()
+	end
 end
 
 function draw_gameover()
-
+	local tip_text = "- press -"
+	love.graphics.draw(UI_IMAGES.GAMEOVER_TEXT_LOGO, 10, math.floor(1 + math.sin(math.rad(ticks))*2))
+	draw_press_promt(tip_text, 0, 57, true)
+	local distance_text = "distance: "..player.distance..'m'
+	local defeated_text = "defeated: "..player.defeated
+	draw_press_promt(distance_text, 0, 27, true)
+	draw_press_promt(defeated_text, 0, 35, true)
+	-- draw_grave
+	love.graphics.draw(UI_IMAGES.GAMEOVER_GRAVE, 19, 43)
+	love.graphics.draw(dummy_image, 33, 46)
 end

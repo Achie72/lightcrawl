@@ -2,6 +2,8 @@ local const = {}
 
 const.TOP_LANE_Y_LEVEL = 10
 const.BOTTOM_LANE_Y_LEVEL = 28
+const.DOUBLE_SPAWN_CHANCE = 0.3
+const.SPAWN_WEIGHT_TABLE = {6,2,1,1}
 
 -- weapon types
 const.NONE_TYPE = 0

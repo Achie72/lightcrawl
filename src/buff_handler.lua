@@ -25,7 +25,7 @@ function Choice.new(is_top_or_bottom)
     local self = {
         x = 70,
         y = is_top_or_bottom and const.TOP_LANE_Y_LEVEL or const.BOTTOM_LANE_Y_LEVEL,
-        encounter_type = const.ENCOUNTER_ITEM,
+        encounter_type = const.ENCOUNTER_CHOICE,
         stats = {}
     }
     -- fetch two randomly and assign values
@@ -48,9 +48,8 @@ function Choice.new(is_top_or_bottom)
     end
 
     -- assign random value
-    self.stats[random_key] = math.random(3) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1})
-    self.stats[random_key2] = math.random(3) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1})
-
+    self.stats[random_key] = math.random(2) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1}) + _G.item_diff_val
+    self.stats[random_key2] = math.random(2) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1}) + _G.item_diff_val
     if self.stats[random_key2] < 0 and self.stats[random_key] < 0 then
         -- if both is negative, flip one of them
         local flipper = helpers.random_element_from({random_key, random_key2})
