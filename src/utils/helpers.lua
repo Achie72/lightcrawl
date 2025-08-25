@@ -24,7 +24,7 @@ end
 ---Select a random element from the collection, where elements are "weighted"
 ---@param collection table: a collection of elements from where we choose one
 ---@param weights table: a collection of integer weights corresponding to the collection elements
----@return element: a random element from the table.
+---@return any: random element from the table.
 function helpers.random_weighted_element_from(collection, weights)
     local weighthed_collection = {}
     for i=1,#collection do
@@ -85,15 +85,29 @@ end
 ---@param y number: y position
 ---@param clr RGBColor | number: Color of the text
 function helpers.draw_icon_with_text(icon, icon_width, text, x, y, clr)
-    love.graphics.draw(icon, x, y)
+    helpers.draw_outline(icon, x, y)
 	color.set(clr)
-	love.graphics.print(text, _G.font, x+icon_width, y+1)
+	helpers.print_outline(text, x+icon_width, y+1, clr, 1, 0)
 	color.reset()
+end
+
+function helpers.draw_outline(draw, x, y, thickness, border_color)
+    if thickness == nil then thickness = 1 end
+    if border_color == nil then border_color = color.PICO_BLACK end
+    color.set(border_color)
+    for i=-thickness,thickness do
+        for j=-thickness,thickness do
+            love.graphics.draw(draw,  x+i, y+j)
+        end
+    end
+    color.reset()
+    love.graphics.draw(draw, x, y)
+
 end
 
 function helpers.print_outline(text, x, y, clr, thickness, border_color)
     if thickness == nil then thickness = 1 end
-    if border_color == nil then border_color = color.PICO_DARK_BLUE end
+    if border_color == nil then border_color = color.PICO_BLACK end
 
     color.set(border_color)
     for i=-thickness,thickness do
@@ -119,5 +133,21 @@ end
 function helpers.text_lenght(text)
 	return _G.font:getWidth(text)
 end
+
+-- smooth move library by Werxzy
+function helpers.smooth_move(x, ax, dx, acc, damp, lim)
+    if ax == nil then ax = 0 end
+    if dx == nil then dx = 0 end
+    dx = dx + (x - ax) * acc -- accelerate
+    ax = ax + dx -- move
+    dx = dx * damp -- dampen
+-- limit, not always necessary
+    if math.abs(x - ax) < lim
+    and math.abs(dx) < lim then 
+        dx,ax = 0, x
+    end
+    return ax, dx
+end
+
 
 return helpers

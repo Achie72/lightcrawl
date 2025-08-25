@@ -4,7 +4,7 @@ local colors = require "src.utils.color"
 local particle_handler = {   
     ---@enum PARTICLE_TYPE
     PARTICLE_TYPE = {
-        DOT = 1, RECTANGLE = 2, CIRCLE = 3, SPARK = 4
+        DOT = 1, RECTANGLE = 2, CIRCLE = 3, SPARK = 4, SHOCKWAVE = 5
     }
 }
 
@@ -18,8 +18,10 @@ local color_handler = require "src.utils.color"
 ---@param lifetime number: frame number the particle is alive for
 ---@param color RGBColor|number: the color value of the particle
 ---@param type PARTICLE_TYPE: type of the particle
+---@param size? number: optional size of part
 ---@return table: the particle object
-function particle_handler.new_particle(x, y, sx, sy, lifetime, color, type)
+
+function particle_handler.new_particle(x, y, sx, sy, lifetime, color, type, size)
     local particle = {
         x = x,
         y = y,
@@ -27,7 +29,8 @@ function particle_handler.new_particle(x, y, sx, sy, lifetime, color, type)
         sy = sy,
         lifetime = lifetime,
         color = color,
-        type = type or particle_handler.PARTICLE_TYPE.DOT
+        type = type or particle_handler.PARTICLE_TYPE.DOT,
+        size = size
     }
 
     function particle:update(dt)
@@ -45,6 +48,15 @@ function particle_handler.new_particle(x, y, sx, sy, lifetime, color, type)
             local clr = self.lifetime % 30 < 15 and colors.PICO_DARK_BLUE or colors.PICO_ORANGE
             color_handler.set(clr)
             love.graphics.rectangle("fill", self.x, self.y, 1, 1)
+            color_handler.reset()
+        elseif self.type == particle_handler.PARTICLE_TYPE.CIRCLE then
+            color_handler.set(self.color)
+            love.graphics.circle("fill", self.x, self.y, self.size)
+            color_handler.reset()
+        elseif self.type == particle_handler.PARTICLE_TYPE.SHOCKWAVE then
+            color_handler.set(self.color)
+            local size = self.size / (self.lifetime > 0 and math.abs(1/self.lifetime) or 100)
+            love.graphics.circle("line", self.x, self.y, size)
             color_handler.reset()
         end
     end

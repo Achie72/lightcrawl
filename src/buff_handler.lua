@@ -23,7 +23,7 @@ local stat_keys = {
 -- player choice to pick them up
 function Choice.new(is_top_or_bottom)
     local self = {
-        x = 70,
+        x = 72,
         y = is_top_or_bottom and const.TOP_LANE_Y_LEVEL or const.BOTTOM_LANE_Y_LEVEL,
         encounter_type = const.ENCOUNTER_CHOICE,
         stats = {}
@@ -48,25 +48,47 @@ function Choice.new(is_top_or_bottom)
     end
 
     -- assign random value
-    self.stats[random_key] = math.random(2) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1}) + _G.item_diff_val
-    self.stats[random_key2] = math.random(2) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1}) + _G.item_diff_val
+    self.stats[random_key] = math.random(2) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1}) + math.floor(_G.item_diff_val*0.8)
+    self.stats[random_key2] = math.random(2) * helpers.random_element_from({1,1,1,1,1,1,1,-1,-1,-1}) + math.floor(_G.item_diff_val*0.8)
     if self.stats[random_key2] < 0 and self.stats[random_key] < 0 then
         -- if both is negative, flip one of them
         local flipper = helpers.random_element_from({random_key, random_key2})
         self.stats[flipper] = self.stats[flipper] * -1
     end
 
-
-    function self:update(dt)
-        self.x = self.x - 0.6
+    -- nerf durability, cuz is is broken
+    if self.stats[random_key] == 'durability' then
+        self.stats[random_key] = helpers.random_weighted_element_from({1,2,3,4,5},{1,4,4,2,1})
     end
 
-    function self:apply(obj)
+    if self.stats[random_key2] == 'durability' then
+        self.stats[random_key2] = helpers.random_weighted_element_from({1,2,3,4,5},{1,4,4,2,1})
+    end
+
+
+    function self:update(dt)
+        self.x = self.x - const.MOVEMENT_SPEED
+    end
+
+    function self:apply(obj)    
+        local text = {
+            max_health = "max hp",
+            health = "health",
+            damage = "damage",
+            durability = "durability",
+            shield = "shield"
+        }
+        tooltip_text = {}
         for key,val in pairs(self.stats) do
             if helpers.is_value_in_set(key, {"max_health","health","shield", "damage", "durability"}) then
                 obj[key] = obj[key] + val
+                if val ~= 0 then
+                    table.insert(tooltip_text, text[key]..(val > 0 and " up" or " down"))
+                end
             end
+            
         end
+        set_tooltip(tooltip_text, 80)
     end
 
     function self:draw()
