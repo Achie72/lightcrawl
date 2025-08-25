@@ -10,8 +10,9 @@ function gameover_handler.new()
     function self:keyreleased(key)
       if STATE == const.STATE_GAME_OVER then
         STATE = const.STATE_MENU
+        music:play()
+        music:setLooping(true)
       end
-      print("pressed")
     end
 
     return self

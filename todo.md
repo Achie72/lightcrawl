@@ -1,22 +1,37 @@
-
-
-- MVP STUFF
 - add f5 and ctrl f5 with shortcut
 
-- Add actual button listener
-- Balance spawns
-- Add legendary items to shops
-- add at least slimes back
+- MVP STUFF
 
 
-- SFX
 
-- Animations
-- Particles
+
+
 
 
 - Good to have
 
+- RESET VARIABLES
+- spawn a weapon first always
+
+- Rewrite spawning
+  - Problem comes from movement and spawning intervals
+  - always need so spawn something later than the previous moved away
+  - look into different step values
+
+
+
+
+
+
+- Animations
+- Particles
+
+- indiacte differently with particles if shield is damaged or health
+- some kind of unique version for HP regain
+- Add outlines to texts
+- SFX
+- Background
+- Add legendary items to shops
 - Text floats (non mvp)
 - Smoother movement (non mvp)
 - Enemy vareity (??? very much not MVP feature)
@@ -39,6 +54,15 @@
 
 # DONE
 
+- Add UI boxes
+- particle variety
+- update prices of shops based on difficulty
+
+
+- Add actual button listener
+- smooth movement - probably should move to end goal if another input is sent
+- POC rewrite of spawn functions
+- add at least slimes back
 - fixed scaling
 - fixed buffs erroring
 - fixed weapon pickup

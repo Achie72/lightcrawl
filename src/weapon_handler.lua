@@ -12,27 +12,33 @@ local weapon_image_table = {
     WEAPON_IMAGES.HAMMER_IMAGE
 }
 
+local weapon_random_values = {
+    {{2,4},{2,4}},
+    {{1,3},{3,5}},
+    {{3,5},{1,3}}
+}
+
 
 function Weapon.new(id, is_top_or_bottom)
     local self = {
         id = id,
-        x = 70,
+        x = 72,
         y = is_top_or_bottom and const.TOP_LANE_Y_LEVEL or const.BOTTOM_LANE_Y_LEVEL,
         sprite = weapon_image_table[id],
-        damage = helpers.random_element_from({1,2,3}) + _G.item_diff_val,
-        durability = helpers.random_element_from({1,2,3}),
+        damage = math.random(weapon_random_values[id][1][1],weapon_random_values[id][1][2]) + _G.item_diff_val,
+        durability = math.random(weapon_random_values[id][2][1],weapon_random_values[id][2][2]),
         encounter_type = const.ENCOUNTER_WEAPON
     }
     
     function self:update(dt)
-        self.x = self.x - 0.6
+        self.x = self.x - const.MOVEMENT_SPEED
     end
 
     function self:draw()
         local x_pos, y_pos = math.floor(self.x), math.floor(self.y)
-        love.graphics.draw(self.sprite, x_pos, y_pos)
+        helpers.draw_outline(self.sprite, x_pos, y_pos)
         color.set(color.PICO_LIGHT_GREY)
-        love.graphics.print(self.damage.."/"..self.durability, _G.font, x_pos, y_pos-6)
+        helpers.print_outline(self.damage.."/"..self.durability, x_pos, y_pos-6, 6, 1, 0)
         color.reset()
     end
 

@@ -86,9 +86,7 @@ function color.set(color_index, alpha)
     love.graphics.setColor(
         color_to_use[1] / 255,
         color_to_use[2] / 255,
-        color_to_use[3] / 255,
-        (alpha or 255) / 255
-    )
+        color_to_use[3] / 255)
 end
 
 --- Restore the love.graphics.color() to 1,1,1,1
